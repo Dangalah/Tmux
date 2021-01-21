@@ -1,0 +1,80 @@
+#!/usr/bin/python3
+
+import libtmux
+import tqdm
+import argparse
+
+from tqdm import tqdm
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-nu","--num_users", type=int, help="Number of users")
+parser.add_argument("-n","--name", help="Name of server")
+parser.add_argument("-nums","--num_session", help="Number of session")
+
+parser.add_argument("-o", "--operations", choices=["start", "window", "ls", "stop", "stopall"] )
+
+args = parser.parse_args()
+
+def start(num_users):
+	
+    a = 0
+    server = libtmux.Server()
+    server.new_session(args.name)
+    session = server.find_where({ "session_name": args.name })
+    if a != num_users:
+        for a in tqdm(range(1, num_users)):
+            session.new_window()
+            window = session.attached_window
+            pane = window.split_window(attach=False)
+            pane.select_pane()
+            pane.send_keys("jupyter notebook --no-browser")
+            
+			
+    cont = print("\ncomplete\n")
+
+    return server
+
+def window():
+
+    server = libtmux.Server()
+    session = server.find_where({ "session_name": args.name })
+    session.new_window()
+    window = session.attached_window
+    pane = window.split_window(attach=False)
+    pane.select_pane()
+    pane.send_keys("jupyter notebook --no-browser")
+
+def ls():
+
+    server = libtmux.Server()
+    session = server.find_where({ "session_name": args.name })
+    ls = session.list_windows()
+    print(ls)
+
+def stop(num):
+
+    server = libtmux.Server()
+    session = server.find_where({ "session_name": args.name })
+    session.kill_window(num)
+
+    return 0
+
+def stop_all():
+
+    server = libtmux.Server()
+    server.kill_session(args.name)
+
+    return 0
+
+if args.operations == "start":
+    start(args.num_users)
+elif args.operations == "stopall":
+    stop_all()
+elif args.operations == "ls":
+    ls()
+elif args.operations == "window":
+    window()
+elif args.operations == "stop":
+    stop(args.num_session)
